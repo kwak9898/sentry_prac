@@ -1,19 +1,26 @@
 import express, { Express, Request, Response } from 'express';
-import Sentry from '@sentry/node';
+import * as Sentry from '@sentry/node';
+import * as Tracing from '@sentry/tracing';
 import dotenv from 'dotenv';
+import { RewriteFrames } from '@sentry/integrations';
 
 dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT;
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Express + TypeScript Server');
-});
-
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
   tracesSampleRate: 1.0,
+  integrations: [
+    new Sentry.Integrations.Http({ tracing: true }),
+    new Tracing.Integrations.Express({
+      app,
+    }),
+    new RewriteFrames({
+      root: global.__dirname,
+    }),
+  ],
 });
 
 const transaction = Sentry.startTransaction({
@@ -21,19 +28,18 @@ const transaction = Sentry.startTransaction({
   name: 'My First Test Transaction',
 });
 
-function foo() {
-  console.error('error');
-}
+app.use(Sentry.Handlers.requestHandler());
+app.use(Sentry.Handlers.tracingHandler());
+app.use(Sentry.Handlers.errorHandler());
 
-setTimeout(() => {
-  try {
-    foo();
-  } catch (err) {
-    Sentry.captureException(err);
-  } finally {
-    transaction.finish();
-  }
-}, 99);
+app.get('/', (req: Request, res: Response) => {
+  res.send('Express + TypeScript Server');
+});
+
+app.use(function onError(err: Error, req: Request, res: Response) {
+  res.statusCode = 500;
+  res.end('TEst');
+});
 
 app.listen(port, () => {
   console.log(`🚀Started Server with http://localhost:${port}`);
