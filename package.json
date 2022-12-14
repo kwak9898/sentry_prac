@@ -1,7 +1,7 @@
 {
   "name": "sentry_prac",
   "version": "1.0.0",
-  "main": "app.js",
+  "main": "app.ts",
   "license": "MIT",
   "dependencies": {
     "express": "^4.18.2"
