@@ -55,6 +55,8 @@ setTimeout(() => {
   }
 }, 99);
 
+console.log('github + slack connect test');
+
 app.listen(port, () => {
   console.log(`🚀Started Server with http://localhost:${port}`);
 });
