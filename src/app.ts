@@ -38,8 +38,22 @@ app.get('/', (req: Request, res: Response) => {
 
 app.use(function onError(err: Error, req: Request, res: Response) {
   res.statusCode = 500;
-  res.end('TEst');
+  res.end('Test');
 });
+
+function exam() {
+  throw new Error('에러 발생');
+}
+
+setTimeout(() => {
+  try {
+    exam();
+  } catch (e) {
+    Sentry.captureException(e);
+  } finally {
+    transaction.finish();
+  }
+}, 99);
 
 app.listen(port, () => {
   console.log(`🚀Started Server with http://localhost:${port}`);
